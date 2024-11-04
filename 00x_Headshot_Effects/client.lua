@@ -186,4 +186,12 @@ AddEventHandler('onResourceStop', function(resourceName)
             StopParticleFxLooped(particleId, 0)
         end
     end
+
+    local savedIndex = GetResourceKvpInt(Config.EFFECT_INDEX_KEY)
+    if savedIndex ~= 0 and savedIndex <= #Config.availableEffects then
+        _G.currentEffectIndex = savedIndex
+        Config.currentEffectIndex = savedIndex
+    else
+        _G.currentEffectIndex = Config.currentEffectIndex
+    end
 end)
