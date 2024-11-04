@@ -131,7 +131,7 @@ local function OpenEffectsMenu()
     local menu = {
         id = 'headshot_effects_menu',
         title = '暴頭特效選擇',
-        position = 'top-right',
+        position = 'rpgonline',
         options = CreateEffectMenu()
     }
     
@@ -146,34 +146,30 @@ RegisterCommand('headshotmenu', function()
     OpenEffectsMenu()
 end, false)
 
-AddEventHandler('gameEventTriggered', function(name, data)
-    if name == "CEventNetworkEntityDamage" then
-        local sourceEntity = data[1]
-        local player = data[2]
-        if DoesEntityExist(sourceEntity) and GetEntityType(sourceEntity) == 1 then
-            if player == PlayerPedId() or (Config.ShowNPC and player == -1) then
-                local currentHealth = GetEntityHealth(sourceEntity)
-                local bone = GetPedLastDamageBone(sourceEntity)
-                local isHeadshot = (bone == 31086)
-                
-                if not isHeadshot and currentHealth <= 0 then
-                    isHeadshot = true
-                end
+BUILD = GetGameBuildNumber()
+AddEventHandler('gameEventTriggered', function(eventName, data)
+    if eventName == 'CEventNetworkEntityDamage' then
+        local victim = data[1]
+        local attacker = data[2]
+        
+        if attacker ~= PlayerPedId() and victim ~= PlayerPedId() then
+            return
+        end
 
-                if isHeadshot then
-                    local boneCoords = GetPedBoneCoords(sourceEntity, bone, 0.0, 0.0, 0.0)
-                    if boneCoords then
-                        local headSize = GetPedHeadBlendData(sourceEntity)
-                        local effectOffset = (headSize and headSize.shapeThird * 0.01) or 0.0
-                        
-                        local effectCoords = vector3(
-                            boneCoords.x,
-                            boneCoords.y,
-                            boneCoords.z + effectOffset
-                        )
-                        
-                        CreateHeadshotEffect(effectCoords)
-                    end
+        local offset = 0
+        if BUILD >= 2060 then
+            offset = offset + 1
+            if BUILD >= 2189 then
+                offset = offset + 1
+            end
+        end
+
+        if entity ~= victim then
+            local is_ped, bone = GetPedLastDamageBone(victim)
+            if is_ped == 1 then
+                position = GetPedBoneCoords(victim, bone)
+                if bone == 31086 then
+                    CreateHeadshotEffect(position)
                 end
             end
         end
